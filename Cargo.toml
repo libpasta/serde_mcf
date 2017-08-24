@@ -1,0 +1,13 @@
+[package]
+name = "serde_mcf"
+version = "0.1.0"
+authors = ["Sam Scott <sam.scott89@gmail.com>"]
+
+[dependencies]
+data-encoding = "1.2"
+error-chain = "0.11.0-rc.2"
+serde = "1.0"
+serde_bytes = "0.10"
+serde_derive = "1.0"
+serde_json = { version = "1.0", features = ["preserve_order"] }
+toml = "0.4"
