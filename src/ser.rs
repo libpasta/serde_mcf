@@ -94,42 +94,31 @@ impl<'a, W: Write> Serializer for &'a mut McfSerializer<W> {
     }
 
     /// Returns an error.
-    fn serialize_unit_struct(self,
-                             _name: &'static str)
-                             -> Result<Self::Ok> {
+    fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok> {
         Err(ErrorKind::Unsupported.into())
     }
 
-    /// Returns an error.
     fn serialize_unit_variant(self,
                               _name: &'static str,
                               _variant_index: u32,
                               variant: &'static str)
                               -> Result<Self::Ok> {
-        // Err(ErrorKind::Unsupported.into())
         self.write(variant)
     }
 
-    /// Returns an error.
-    fn serialize_newtype_struct<T: ?Sized + ser::Serialize>
-        (self,
-         _name: &'static str,
-         value: &T)
-         -> Result<Self::Ok> {
-        // Err(ErrorKind::Unsupported.into())
+    fn serialize_newtype_struct<T: ?Sized + ser::Serialize>(self,
+                                                            _name: &'static str,
+                                                            value: &T)
+                                                            -> Result<Self::Ok> {
         value.serialize(self)
     }
 
-    /// Returns an error.
-    fn serialize_newtype_variant<T: ?Sized + ser::Serialize>
-        (self,
-         _name: &'static str,
-         _variant_index: u32,
-         variant: &'static str,
-         value: &T)
-         -> Result<Self::Ok> {
-        // let prefix = format!("${}", variant).to_string();
-        // value.serialize(&mut McfSerializer(prefix))
+    fn serialize_newtype_variant<T: ?Sized + ser::Serialize>(self,
+                                                             _name: &'static str,
+                                                             _variant_index: u32,
+                                                             variant: &'static str,
+                                                             value: &T)
+                                                             -> Result<Self::Ok> {
         self.write(variant)?;
         value.serialize(self)
     }
@@ -140,24 +129,16 @@ impl<'a, W: Write> Serializer for &'a mut McfSerializer<W> {
     }
 
     /// Returns an error.
-    fn serialize_some<T: ?Sized + ser::Serialize>
-        (self,
-         _value: &T)
-         -> Result<Self::Ok> {
+    fn serialize_some<T: ?Sized + ser::Serialize>(self, _value: &T) -> Result<Self::Ok> {
         Err(ErrorKind::Unsupported.into())
     }
 
-    /// Returns an error.
-    fn serialize_seq(self,
-                     _len: Option<usize>)
-                     -> Result<Self::SerializeSeq> {
+    fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
         Ok(McfSeq(self, false))
     }
 
 
-    fn serialize_tuple(self,
-                       _len: usize)
-                       -> Result<Self::SerializeTuple> {
+    fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple> {
         Ok(McfSeq(self, false))
     }
 
@@ -169,39 +150,30 @@ impl<'a, W: Write> Serializer for &'a mut McfSerializer<W> {
         Err(ErrorKind::Unsupported.into())
     }
 
-    fn serialize_tuple_variant
-        (self,
-         _name: &'static str,
-         _variant_index: u32,
-         variant: &'static str,
-         _len: usize)
-         -> Result<Self::SerializeTupleVariant>
-    {
+    fn serialize_tuple_variant(self,
+                               _name: &'static str,
+                               _variant_index: u32,
+                               variant: &'static str,
+                               _len: usize)
+                               -> Result<Self::SerializeTupleVariant> {
         self.write(variant)?;
         Ok(self)
     }
 
-    fn serialize_map(self,
-                     _len: Option<usize>)
-                     -> Result<Self::SerializeMap> {
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
         Ok(McfSeq(self, false))
     }
 
-    fn serialize_struct(self,
-                        _name: &'static str,
-                        _len: usize)
-                        -> Result<Self::SerializeStruct> {
+    fn serialize_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeStruct> {
         Ok(McfSeq(self, false))
     }
 
-    fn serialize_struct_variant
-        (self,
-         _name: &'static str,
-         _variant_index: u32,
-         variant: &'static str,
-         _len: usize)
-         -> Result<Self::SerializeStructVariant> 
-    {
+    fn serialize_struct_variant(self,
+                                _name: &'static str,
+                                _variant_index: u32,
+                                variant: &'static str,
+                                _len: usize)
+                                -> Result<Self::SerializeStructVariant> {
         self.write(variant)?;
         Ok(self)
     }
@@ -209,9 +181,10 @@ impl<'a, W: Write> Serializer for &'a mut McfSerializer<W> {
 
 
 impl ser::Error for Error {
-    fn custom<T>(msg: T) -> Self 
-        where T: Display {
-            ErrorKind::Custom(msg.to_string()).into()
+    fn custom<T>(msg: T) -> Self
+        where T: Display
+    {
+        ErrorKind::Custom(msg.to_string()).into()
     }
 }
 
@@ -253,7 +226,6 @@ impl<'a, W: Write> SerializeSeq for McfSeq<'a, W> {
     }
 }
 
-// impl<'a, W: Write> SerializeStruct for &'a mut McfSerializer<W> {
 impl<'a, W: Write> SerializeStruct for McfSeq<'a, W> {
     type Ok = ();
     type Error = Error;
@@ -285,7 +257,6 @@ impl<'a, W: Write> SerializeStructVariant for &'a mut McfSerializer<W> {
     fn end(self) -> Result<Self::Ok> {
         Ok(())
     }
-
 }
 
 impl<'a, W: Write> SerializeTupleVariant for &'a mut McfSerializer<W> {
@@ -295,7 +266,6 @@ impl<'a, W: Write> SerializeTupleVariant for &'a mut McfSerializer<W> {
     fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<()>
         where T: Serialize
     {
-        // self.0.push('$');
         self.write("$")?;
         value.serialize(&mut **self)
     }
@@ -303,7 +273,6 @@ impl<'a, W: Write> SerializeTupleVariant for &'a mut McfSerializer<W> {
     fn end(self) -> Result<Self::Ok> {
         Ok(())
     }
-
 }
 
 impl<'a, W: Write> SerializeTupleStruct for &'a mut McfSerializer<W> {
@@ -319,7 +288,6 @@ impl<'a, W: Write> SerializeTupleStruct for &'a mut McfSerializer<W> {
     fn end(self) -> Result<Self::Ok> {
         Ok(())
     }
-
 }
 
 impl<'a, W: Write> SerializeMap for McfSeq<'a, W> {
@@ -348,7 +316,8 @@ impl<'a, W: Write> SerializeMap for McfSeq<'a, W> {
     }
 
     fn serialize_entry<K: ?Sized, V: ?Sized>(&mut self, key: &K, value: &V) -> Result<()>
-        where K: Serialize, V: Serialize,
+        where K: Serialize,
+              V: Serialize
     {
         if self.1 {
             self.0.write(",")?;
@@ -358,14 +327,12 @@ impl<'a, W: Write> SerializeMap for McfSeq<'a, W> {
         self.1 = true;
         self.0.write(value.serialize(StringSerializer)?)
     }
-
 }
 
 
 #[cfg(test)]
 mod test {
     use serde_bytes;
-    // use serde::Serialize;
 
     #[test]
     fn test_serialize() {
@@ -384,20 +351,16 @@ mod test {
         };
 
         let ts = super::to_string(&t).unwrap();
-        // let ts = t.serialize(&mut super::McfSerializer(String::new())).unwrap();
         assert_eq!(ts, "$12$5$EiM0");
 
 
         #[derive(Serialize)]
         #[serde(tag = "variant")]
         enum TestEnum {
-          First { a: u8, b: u8 },
+            First { a: u8, b: u8 },
         }
 
-        let t = TestEnum::First {
-            a: 38,
-            b: 128
-        };
+        let t = TestEnum::First { a: 38, b: 128 };
 
         let ts = super::to_string(&t).unwrap();
         assert_eq!(ts, "$First$38$128");
@@ -444,9 +407,7 @@ impl Serializer for StringSerializer {
     }
 
     /// Returns an error.
-    fn serialize_unit_struct(self,
-                             _name: &'static str)
-                             -> Result<Self::Ok> {
+    fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok> {
         Err(ErrorKind::Unsupported.into())
     }
 
@@ -460,22 +421,20 @@ impl Serializer for StringSerializer {
     }
 
     /// Returns an error.
-    fn serialize_newtype_struct<T: ?Sized + ser::Serialize>
-        (self,
-         _name: &'static str,
-         _value: &T)
-         -> Result<Self::Ok> {
+    fn serialize_newtype_struct<T: ?Sized + ser::Serialize>(self,
+                                                            _name: &'static str,
+                                                            _value: &T)
+                                                            -> Result<Self::Ok> {
         Err(ErrorKind::Unsupported.into())
     }
 
     /// Returns an error.
-    fn serialize_newtype_variant<T: ?Sized + ser::Serialize>
-        (self,
-         _name: &'static str,
-         _variant_index: u32,
-        _variant: &'static str,
-         _value: &T)
-         -> Result<Self::Ok> {
+    fn serialize_newtype_variant<T: ?Sized + ser::Serialize>(self,
+                                                             _name: &'static str,
+                                                             _variant_index: u32,
+                                                             _variant: &'static str,
+                                                             _value: &T)
+                                                             -> Result<Self::Ok> {
         Err(ErrorKind::Unsupported.into())
     }
 
@@ -485,24 +444,17 @@ impl Serializer for StringSerializer {
     }
 
     /// Returns an error.
-    fn serialize_some<T: ?Sized + ser::Serialize>
-        (self,
-         _value: &T)
-         -> Result<Self::Ok> {
+    fn serialize_some<T: ?Sized + ser::Serialize>(self, _value: &T) -> Result<Self::Ok> {
         Err(ErrorKind::Unsupported.into())
     }
 
     /// Returns an error.
-    fn serialize_seq(self,
-                     _len: Option<usize>)
-                     -> Result<Self::SerializeSeq> {
+    fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
         Err(ErrorKind::Unsupported.into())
     }
 
 
-    fn serialize_tuple(self,
-                       _len: usize)
-                       -> Result<Self::SerializeTuple> {
+    fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple> {
         Err(ErrorKind::Unsupported.into())
     }
 
@@ -514,41 +466,30 @@ impl Serializer for StringSerializer {
         Err(ErrorKind::Unsupported.into())
     }
 
-    fn serialize_tuple_variant
-        (self,
-         _name: &'static str,
-         _variant_index: u32,
-         _variant: &'static str,
-         _len: usize)
-         -> Result<Self::SerializeTupleVariant>
-    {
+    fn serialize_tuple_variant(self,
+                               _name: &'static str,
+                               _variant_index: u32,
+                               _variant: &'static str,
+                               _len: usize)
+                               -> Result<Self::SerializeTupleVariant> {
         Err(ErrorKind::Unsupported.into())
     }
 
-    fn serialize_map(self,
-                     _len: Option<usize>)
-                     -> Result<Self::SerializeMap> {
+    fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
         Err(ErrorKind::Unsupported.into())
 
     }
 
-    fn serialize_struct(self,
-                        _name: &'static str,
-                        _len: usize)
-                        -> Result<Self::SerializeStruct> {
+    fn serialize_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeStruct> {
         Err(ErrorKind::Unsupported.into())
     }
 
-    fn serialize_struct_variant
-        (self,
-         _name: &'static str,
-         _variant_index: u32,
-         _variant: &'static str,
-         _len: usize)
-         -> Result<Self::SerializeStructVariant> 
-    {
+    fn serialize_struct_variant(self,
+                                _name: &'static str,
+                                _variant_index: u32,
+                                _variant: &'static str,
+                                _len: usize)
+                                -> Result<Self::SerializeStructVariant> {
         Err(ErrorKind::Unsupported.into())
     }
-
 }
-

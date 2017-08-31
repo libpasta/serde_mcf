@@ -32,8 +32,6 @@ pub use ser::{to_string, McfSerializer};
 pub use serde_json::{Map, Value};
 
 /// A generic hash converted from the `ModularCryptFormat`.
-///
-/// 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct McfHash {
     pub algorithm: Hashes,
@@ -52,7 +50,7 @@ pub mod legacy {
         algorithm: Hashes,
         cost: u8,
         #[serde(with = "base64bcrypt")]
-        salthash: (Vec<u8>, Vec<u8>)
+        salthash: (Vec<u8>, Vec<u8>),
     }
 
     impl Into<McfHash> for BcryptHash {
@@ -127,7 +125,6 @@ enum_hashes!{
     Scram = "scram", // Passlib-specific
     CtaPbkdf2Sha1 = "p5k2",
     Scrypt = "scrypt",  // Passlib-specific
-    ScryptMcf = "scrypt-mcf",
 
     Hmac = "hmac", // for libpasta
     Custom = "custom", // for any other purposes. fill details in params field
@@ -149,9 +146,11 @@ mod test {
         assert_eq!(to_string(&argon).unwrap(), argon_hash);
         let bcrypt: legacy::BcryptHash = from_str(bcrypt_hash).unwrap();
         println!("{:?}", bcrypt);
-        println!("In JSON: {}", serde_json::to_string_pretty(&bcrypt).unwrap());
+        println!("In JSON: {}",
+                 serde_json::to_string_pretty(&bcrypt).unwrap());
         let updated: McfHash = bcrypt.into();
-        println!("In JSON: {}", serde_json::to_string_pretty(&updated).unwrap());
+        println!("In JSON: {}",
+                 serde_json::to_string_pretty(&updated).unwrap());
         // assert_eq!(to_string(updated).unwrap(), bcrypt_hash);
 
     }
@@ -181,7 +180,11 @@ mod test {
 
 
 
-        assert!(if let BcryptOrArgon::Argon(_) = argon { true} else { false });
+        assert!(if let BcryptOrArgon::Argon(_) = argon {
+            true
+        } else {
+            false
+        });
 
         let bcrypt = {
             match from_str::<McfHash>(bcrypt_hash) {
@@ -193,6 +196,10 @@ mod test {
             }
         };
 
-        assert!(if let BcryptOrArgon::Bcrypt(_) = bcrypt { true} else { false });
+        assert!(if let BcryptOrArgon::Bcrypt(_) = bcrypt {
+            true
+        } else {
+            false
+        });
     }
 }

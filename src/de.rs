@@ -14,14 +14,15 @@ error_chain!{
 }
 
 impl de::Error for Error {
-    fn custom<T>(msg: T) -> Self 
-        where T: Display {
-            ErrorKind::Custom(msg.to_string()).into()
+    fn custom<T>(msg: T) -> Self
+        where T: Display
+    {
+        ErrorKind::Custom(msg.to_string()).into()
     }
 }
 
 /// Deserializer for the MCF format.
-pub struct McfDeserializer<'de, I: Iterator<Item=&'de str>>(I);
+pub struct McfDeserializer<'de, I: Iterator<Item = &'de str>>(I);
 
 impl<'de> McfDeserializer<'de, Split<'de, char>> {
     /// Create a new deserializer from a string ref.
@@ -69,7 +70,7 @@ macro_rules! forward_parsable_to_deserialize_any {
 }
 
 
-impl<'a, 'de, I: Iterator<Item=&'de str>> Deserializer<'de> for &'a mut McfDeserializer<'de, I> {
+impl<'a, 'de, I: Iterator<Item = &'de str>> Deserializer<'de> for &'a mut McfDeserializer<'de, I> {
     type Error = Error;
 
     // By default attempt to visit a string.
@@ -85,29 +86,31 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> Deserializer<'de> for &'a mut McfDeser
 
     // A struct is deserialized by iterating through the expected fields, and
     // returning each value one-by-one.
-    fn deserialize_struct<V>(self, _name: &'static str, 
-                             fields: &'static [&'static str], 
-                             visitor: V) -> Result<V::Value>
+    fn deserialize_struct<V>(self,
+                             _name: &'static str,
+                             fields: &'static [&'static str],
+                             visitor: V)
+                             -> Result<V::Value>
         where V: Visitor<'de>
     {
         // TODO: could change this to visit_seq?
         visitor.visit_map(McfWithFields(self, fields.to_vec().into_iter()))
     }
 
-    // Attempt to deserialize the enum by simply checking the next field for a 
+    // Attempt to deserialize the enum by simply checking the next field for a
     // variant name.
-    fn deserialize_enum<V>(self,_name: &'static str,
-        _variants: &'static [&'static str], visitor: V
-    ) -> Result<V::Value>
+    fn deserialize_enum<V>(self,
+                           _name: &'static str,
+                           _variants: &'static [&'static str],
+                           visitor: V)
+                           -> Result<V::Value>
         where V: Visitor<'de>
     {
         visitor.visit_enum(self)
     }
 
     // Deserialize the next value as an identifer.
-    fn deserialize_identifier<V>(self,
-        visitor: V
-    ) -> Result<V::Value>
+    fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value>
         where V: Visitor<'de>
     {
         if let Some(k) = self.0.next() {
@@ -122,7 +125,7 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> Deserializer<'de> for &'a mut McfDeser
         where V: Visitor<'de>
     {
         if let Some(v) = self.0.next() {
-            visitor.visit_byte_buf(base64::decode_nopad(v.as_bytes())?)   
+            visitor.visit_byte_buf(base64::decode_nopad(v.as_bytes())?)
         } else {
             Err("no value found".into())
         }
@@ -135,7 +138,7 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> Deserializer<'de> for &'a mut McfDeser
     {
         if let Some(v) = self.0.next() {
             let iter = v.split(',');
-            visitor.visit_seq(&mut McfDeserializer(iter))   
+            visitor.visit_seq(&mut McfDeserializer(iter))
         } else {
             Err("no value found".into())
         }
@@ -144,10 +147,10 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> Deserializer<'de> for &'a mut McfDeser
     // Deserializer a tuple by treating it as a sequence.
     fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value>
         where V: Visitor<'de>
-    {   
+    {
         if let Some(v) = self.0.next() {
             let iter = v.split(',');
-            visitor.visit_seq(&mut McfDeserializer(iter))   
+            visitor.visit_seq(&mut McfDeserializer(iter))
         } else {
             Err("no value found".into())
         }
@@ -171,16 +174,16 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> Deserializer<'de> for &'a mut McfDeser
     //
     // This currently only works for flat options.
     fn deserialize_option<V>(self, visitor: V) -> Result<V::Value>
-            where V: Visitor<'de>,
-        {
-            if let Some(v) = self.0.next() {
-                match v {
-                    "" => visitor.visit_none(),
-                    v => visitor.visit_some(&mut McfDeserializer([v].iter().cloned())),
-                }
-            } else {
-                Err("no value found".into())
+        where V: Visitor<'de>
+    {
+        if let Some(v) = self.0.next() {
+            match v {
+                "" => visitor.visit_none(),
+                v => visitor.visit_some(&mut McfDeserializer([v].iter().cloned())),
             }
+        } else {
+            Err("no value found".into())
+        }
     }
 
     forward_to_deserialize_any! {
@@ -208,10 +211,12 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> Deserializer<'de> for &'a mut McfDeser
 // whatever is returned from the iterator J.
 struct McfWithFields<'a, 'de: 'a, I: 'a + Iterator<Item=&'de str>, J: Iterator<Item=&'de str>>(&'a mut McfDeserializer<'de, I>, J);
 
-impl<'a, 'de, I: Iterator<Item=&'de str>, J: Iterator<Item=&'de str>> de::MapAccess<'de> for McfWithFields<'a, 'de, I, J> {
+impl<'a, 'de, I: Iterator<Item = &'de str>, J: Iterator<Item = &'de str>> de::MapAccess<'de>
+    for
+    McfWithFields<'a, 'de, I, J> {
     type Error = Error;
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
-        where K: de::DeserializeSeed<'de>,
+        where K: de::DeserializeSeed<'de>
     {
         // Take the next field from the iterator and deserialize it.
         if let Some(field) = self.1.next() {
@@ -222,20 +227,20 @@ impl<'a, 'de, I: Iterator<Item=&'de str>, J: Iterator<Item=&'de str>> de::MapAcc
     }
 
     fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value>
-        where V: de::DeserializeSeed<'de>,
+        where V: de::DeserializeSeed<'de>
     {
         // Continue to deserialize from the McfDeserializer
         seed.deserialize(&mut *self.0)
     }
 }
 
-impl<'a, 'de, I: Iterator<Item=&'de str>> de::MapAccess<'de> for &'a mut McfDeserializer<'de, I> {
+impl<'a, 'de, I: Iterator<Item = &'de str>> de::MapAccess<'de> for &'a mut McfDeserializer<'de, I> {
     type Error = Error;
 
     // Similar to the above, but assumes all values are being returned from a
     // single iterator/deserializer.
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
-        where K: de::DeserializeSeed<'de>,
+        where K: de::DeserializeSeed<'de>
     {
         if let Some(field) = self.0.next() {
             seed.deserialize(&mut McfDeserializer([field].iter().cloned())).map(Some)
@@ -245,14 +250,15 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> de::MapAccess<'de> for &'a mut McfDese
     }
 
     fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value>
-        where V: de::DeserializeSeed<'de>,
+        where V: de::DeserializeSeed<'de>
     {
         seed.deserialize(&mut **self)
     }
 }
 
 
-impl<'a, 'de, I: Iterator<Item=&'de str>> de::EnumAccess<'de> for &'a mut McfDeserializer<'de, I> {
+impl<'a, 'de, I: Iterator<Item = &'de str>> de::EnumAccess<'de>
+    for &'a mut McfDeserializer<'de, I> {
     type Error = Error;
     type Variant = &'a mut McfDeserializer<'de, I>;
 
@@ -272,7 +278,9 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> de::EnumAccess<'de> for &'a mut McfDes
 
 // `VariantAccess` is provided to the `Visitor` to give it the ability to see
 // the content of the single variant that it decided to deserialize.
-impl<'a, 'de, I: Iterator<Item=&'de str>> de::VariantAccess<'de> for &'a mut McfDeserializer<'de, I> {
+impl<'a, 'de, I: Iterator<Item = &'de str>> de::VariantAccess<'de>
+    for
+    &'a mut McfDeserializer<'de, I> {
     type Error = Error;
 
     fn unit_variant(self) -> Result<()> {
@@ -296,18 +304,14 @@ impl<'a, 'de, I: Iterator<Item=&'de str>> de::VariantAccess<'de> for &'a mut Mcf
 
     // Struct variants are represented in JSON as `{ NAME: { K: V, ... } }` so
     // deserialize the inner map here.
-    fn struct_variant<V>(
-        self,
-        fields: &'static [&'static str],
-        visitor: V,
-    ) -> Result<V::Value>
+    fn struct_variant<V>(self, fields: &'static [&'static str], visitor: V) -> Result<V::Value>
         where V: Visitor<'de>
     {
         de::Deserializer::deserialize_struct(self, "", fields, visitor)
     }
 }
 
-impl<'a, 'de, I: Iterator<Item=&'de str>> de::SeqAccess<'de> for &'a mut McfDeserializer<'de, I> {
+impl<'a, 'de, I: Iterator<Item = &'de str>> de::SeqAccess<'de> for &'a mut McfDeserializer<'de, I> {
     type Error = Error;
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
         where T: de::DeserializeSeed<'de>
@@ -351,13 +355,10 @@ mod test {
 
         #[derive(Debug, PartialEq, Deserialize)]
         enum TestEnum {
-          First { a: u8, b: u8 },
+            First { a: u8, b: u8 },
         }
 
-        let t = TestEnum::First {
-            a: 38,
-            b: 128
-        };
+        let t = TestEnum::First { a: 38, b: 128 };
 
         let ts = "$First$38$128";
         assert_eq!(super::from_str::<TestEnum>(ts).unwrap(), t);
