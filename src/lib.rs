@@ -33,7 +33,7 @@ pub use ser::{to_string, McfSerializer};
 
 pub use serde_json::{Map, Value};
 
-mod errors {
+pub mod errors {
     use data_encoding;
     use std::io;
 
