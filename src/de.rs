@@ -1,17 +1,10 @@
+use data_encoding::BASE64_NOPAD;
 use serde::de::{self, Deserialize, Deserializer, IntoDeserializer, Visitor};
+
 use std::fmt::Display;
 use std::str::Split;
-// use std::iter::Peekable;
 
-use data_encoding::{self, base64};
-
-error_chain!{
-    errors { Custom(msg: String) }
-
-    foreign_links {
-        Decoding(data_encoding::decode::Error);
-    }
-}
+use errors::*;
 
 impl de::Error for Error {
     fn custom<T>(msg: T) -> Self
@@ -125,7 +118,7 @@ impl<'a, 'de, I: Iterator<Item = &'de str>> Deserializer<'de> for &'a mut McfDes
         where V: Visitor<'de>
     {
         if let Some(v) = self.0.next() {
-            visitor.visit_byte_buf(base64::decode_nopad(v.as_bytes())?)
+            visitor.visit_byte_buf(BASE64_NOPAD.decode(v.as_bytes())?)
         } else {
             Err("no value found".into())
         }

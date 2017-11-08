@@ -13,6 +13,8 @@ extern crate data_encoding;
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate serde;
 extern crate serde_bytes;
 #[macro_use]
@@ -30,6 +32,23 @@ pub mod ser;
 pub use ser::{to_string, McfSerializer};
 
 pub use serde_json::{Map, Value};
+
+mod errors {
+    use data_encoding;
+    use std::io;
+
+    error_chain!{
+        errors {
+            Custom(msg: String)
+            Unsupported
+        }
+
+        foreign_links {
+            Decoding(data_encoding::DecodeError);
+            Io(io::Error);
+        }
+    }
+}
 
 /// A generic hash converted from the `ModularCryptFormat`.
 #[derive(Debug, Deserialize, Serialize)]

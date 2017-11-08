@@ -1,20 +1,10 @@
 use serde::ser::*;
 use serde::ser;
 use std::fmt::Display;
-use data_encoding;
-use std::io::{self, Write};
+use std::io::Write;
 
-error_chain!{
-    errors { 
-        Custom(msg: String)
-        Unsupported
-    }
-
-    foreign_links {
-        Decoding(data_encoding::decode::Error);
-        Io(io::Error);
-    }
-}
+use errors::*;
+use errors::Error;
 
 /// Serializer for producing MCF-style hashes.
 pub struct McfSerializer<W: Write>(W);
